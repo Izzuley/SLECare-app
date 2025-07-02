@@ -1,4 +1,5 @@
 # slecare_app.py
+
 import streamlit as st
 import pandas as pd
 import joblib
@@ -29,14 +30,14 @@ with open(feature_path, "r") as f:
 
 # === DEFINE INPUT RULES ===
 binary_dropdown_features = {
-    "MSK", "MUCOCUTANEOS", "NPSLE", "GIT", "FIRST OR RELAPSE LN",
+    "MSK", "MUCOCUTANEOS", "NPSLE", "GIT",
     "ANY CR 6 MTH", "AC KIDNEY INJURY INITIAL (AKI)", "CR 12 MTH PRED 7.5",
     "GLOBAL SCLEROSIS_MISSING", "CKD", "CR 6 MTH PRED 10", "CR 6 MTH PRED 7.5", "RB_diffuse",
     "ACE/ARB"
-}  # Removed "LA" from here
+}
 selectbox_features = {
-    "GENDER", "RACE", "APL POSITIVE", "LA"
-}  # Added "LA" here
+    "GENDER", "RACE", "APL POSITIVE", "LA", "FIRST OR RELAPSE LN"
+}
 
 # === LAYOUT COLUMNS ===
 left, right = st.columns(2)
@@ -49,21 +50,55 @@ for i, feat in enumerate(selected_features):
     col = left if i % 2 == 0 else right
     with col:
         if feat in binary_dropdown_features:
-            val = st.selectbox(f"{feat}", options=[0, 1], key=f"{feat}_binary")
+            if feat == "GLOBAL SCLEROSIS_MISSING":
+                val = st.selectbox(
+                    f"{feat}",
+                    options=[0, 1],
+                    key=f"{feat}_binary",
+                    help="1 = Tiada nilai ujian, 0 = Ada nilai ujian"
+                )
+            else:
+                val = st.selectbox(f"{feat}", options=[0, 1], key=f"{feat}_binary")
             user_input[feat] = int(val)
+
+
         elif feat in selectbox_features:
             if feat == "GENDER":
                 val = st.selectbox(f"{feat}", options=[0, 1], format_func=lambda x: ["Perempuan", "Lelaki"][x], key=f"{feat}_gender")
             elif feat == "RACE":
-                val = st.selectbox(f"{feat}", options=[0, 1, 2], format_func=lambda x: ["Malay", "Chinese", "Indian/Other"][x], key=f"{feat}_race")
+                val = st.selectbox(f"{feat}", options=[0, 1, 2], format_func=lambda x: ["Malay", "Chinese", "Indian"][x], key=f"{feat}_race")
             elif feat == "APL POSITIVE":
                 val = st.selectbox(f"{feat}", options=[0, 1, 2], key=f"{feat}_apl")
             elif feat == "LA":
                 val = st.selectbox(f"{feat}", options=[0, 1, 2], format_func=lambda x: ["Negatif", "Positif", "Tidak Diuji"][x], key=f"{feat}_la")
+            elif feat == "FIRST OR RELAPSE LN":
+                val = st.selectbox(
+                    f"{feat}",
+                    options=[1, 2],
+                    format_func=lambda x: ["First episode", "Relapse episode"][x - 1],
+                    key=f"{feat}_firstrelapse"
+                )
             user_input[feat] = int(val)
+
+        elif feat == "GLOBAL SCLEROSIS":
+            val = st.number_input(
+                f"{feat}",
+                step=0.01,
+                format="%0.2f",
+                key=f"{feat}_num",
+                help="Jika tiada ujian dilakukan, tandakan 'Tiada Ujian Global Sclerosis?' kepada Ya. Nilai akan dianggar."
+            )
+            user_input[feat] = val
+
         else:
             val = st.number_input(f"{feat}", step=0.01, format="%0.2f", key=f"{feat}_num")
             user_input[feat] = val
+
+# === HANDLE SPECIAL IMPUTATION FOR GLOBAL SCLEROSIS ===
+MEDIAN_GLOBAL_SCLEROSIS = 0.0
+if "GLOBAL SCLEROSIS_MISSING" in user_input:
+    if user_input["GLOBAL SCLEROSIS_MISSING"] == 1:
+        user_input["GLOBAL SCLEROSIS"] = MEDIAN_GLOBAL_SCLEROSIS
 
 predict_btn = st.button("🔍 Ramal")
 
@@ -94,7 +129,7 @@ if predict_btn:
 
     # === SHAP BAR PLOT ===
     st.markdown("#### 🔹 Ciri paling mempengaruhi ramalan")
-    fig_bar = plt.figure(figsize=(6, 4))  # Width x Height in inches
+    fig_bar = plt.figure(figsize=(6, 4))
     shap.summary_plot(shap_values, input_df, plot_type="bar", show=False)
     st.pyplot(fig_bar)
 
