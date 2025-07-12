@@ -1,4 +1,4 @@
-# ✅ FINAL FINAL — LA now uses [0,1,2] with Tidak Diuji label
+# ✅ Final: Use precomputed static images for global SHAP bar plots
 
 import streamlit as st
 import pandas as pd
@@ -17,6 +17,7 @@ pilihan_model = st.radio("Pilih Model Ramalan:", ["CKD", "Remission"], horizonta
 if pilihan_model == "CKD":
     model_path = "catboost_ckd_model.pkl"
     feature_path = "ckd_rfe_features.json"
+    global_barplot_img = "ckd_barplot.png"
     master_cat_features = [
         "GENDER", "MSK", "MUCOCUTANEOS", "NPSLE", "SEROSITIS",
         "ACE/ARB", "AC KIDNEY INJURY INITIAL (AKI)", "GLOBAL SCLEROSIS_MISSING",
@@ -26,6 +27,7 @@ if pilihan_model == "CKD":
 else:
     model_path = "catboost_remission_model.pkl"
     feature_path = "remission_rfe_features.json"
+    global_barplot_img = "remission_barplot.png"
     master_cat_features = [
         "PULM", "GIT", "FIRST OR RELAPSE LN", "INDUCTION CYC", "ACE/ARB",
         "AC KIDNEY INJURY INITIAL (AKI)", "CKD", "CRESCENT_MISSING",
@@ -101,21 +103,23 @@ if predict_btn:
         st.error("❗ Ramalan: Risiko Tinggi.")
     else:
         st.success("✅ Ramalan: Risiko Rendah atau Tiada.")
+
     st.subheader("📊 Penjelasan SHAP")
     explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(input_df)
+    shap_values_local = explainer.shap_values(input_df)
     shap_input_df = input_df.copy()
     for cat in ["ANTIDSDNA PRE TX", "ANTIB2 GP1 IGG", "LA", "ACL IGM", "ANTIB2GP1 IGM"]:
         if cat in shap_input_df.columns:
             shap_input_df[cat] = shap_input_df[cat].astype(int)
-    st.markdown("#### 🔹 Carta Waterfall")
+
+    st.markdown("#### 🔹 Sumbangan Faktor Individu")
     fig_waterfall = plt.figure()
-    shap.plots._waterfall.waterfall_legacy(explainer.expected_value, shap_values[0], shap_input_df.iloc[0])
+    shap.plots._waterfall.waterfall_legacy(explainer.expected_value, shap_values_local[0], shap_input_df.iloc[0])
     st.pyplot(fig_waterfall)
-    st.markdown("#### 🔹 Carta Kepentingan Ciri")
-    fig_bar = plt.figure(figsize=(6, 4))
-    shap.summary_plot(shap_values, shap_input_df, plot_type="bar", show=False)
-    st.pyplot(fig_bar)
+
+    st.markdown("#### 🔹 Sumbangan Faktor Keseluruhan")
+    st.image(global_barplot_img, caption="Faktor Keseluruhan (Global)")
+
     st.download_button(
         "📥 Muat Turun Ramalan",
         input_df.assign(Ramalan=prediction).to_csv(index=False).encode("utf-8"),
