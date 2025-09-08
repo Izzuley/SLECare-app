@@ -1,5 +1,3 @@
-# ✅ Final: Use precomputed static images for global SHAP bar plots
-
 import streamlit as st
 import pandas as pd
 import joblib
@@ -7,6 +5,7 @@ import shap
 import matplotlib.pyplot as plt
 import json
 from catboost import Pool
+from pathlib import Path
 
 st.set_page_config(page_title="SLECare - Ramalan Baseline", layout="wide")
 st.title("🧬 SLECare - Ramalan Risiko Baseline")
@@ -119,6 +118,23 @@ if predict_btn:
 
     st.markdown("#### 🔹 Sumbangan Faktor Keseluruhan")
     st.image(global_barplot_img, caption="Faktor Keseluruhan (Global)")
+
+    # ==== Dependence Plots (Precomputed PNGs) ====
+    DEP_DIR = Path("Dependence Plots")
+    st.markdown("#### 🔹 Plot Kebergantungan (Precomputed)")
+    if pilihan_model == "CKD":
+        dep_files = ["CKD_CREAT.png", "CKD_LA.png", "CKD_RACE.png"]
+    else:
+        dep_files = ["Remission_CKD.png", "Remission_GLOBAL.png", "Remission_MONTH.png", "Remission_RACE.png"]
+
+    cols = st.columns(2)
+    for idx, fname in enumerate(dep_files):
+        p = DEP_DIR / fname
+        with cols[idx % 2]:
+            if p.exists():
+                st.image(str(p), caption=f"{fname.replace('_',' ').replace('.png','')}")
+            else:
+                st.info(f"Plot tidak ditemui: {p}")
 
     st.download_button(
         "📥 Muat Turun Ramalan",
