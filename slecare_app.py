@@ -119,9 +119,9 @@ if predict_btn:
     st.markdown("#### 🔹 Sumbangan Faktor Keseluruhan")
     st.image(global_barplot_img, caption="Faktor Keseluruhan (Global)")
 
-    # ==== Dependence Plots (Precomputed PNGs) ====
+    # ==== Dependence Plots ====
     DEP_DIR = Path("Dependence Plots")
-    st.markdown("#### 🔹 Plot Kebergantungan (Precomputed)")
+    st.markdown("#### 🔹 Plot Kebergantungan")
     if pilihan_model == "CKD":
         dep_files = ["CKD_CREAT.png", "CKD_LA.png", "CKD_RACE.png"]
     else:
