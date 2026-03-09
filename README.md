@@ -1,91 +1,121 @@
-# SLECare: Baseline Risk Prediction App
+# SLECare
 
-SLECare is a Streamlit-based clinical decision support prototype developed as part of a Final Year Project (FYP) in machine learning for systemic lupus erythematosus (SLE).
+**SLECare** is a machine learning-based clinical decision support application developed to predict two important outcomes in Malaysian **Lupus Nephritis (LN)** patients:
 
-This application allows a user to enter a patient's baseline clinical data and generate a machine learning prediction for one of two supported outcomes:
+- **Chronic Kidney Disease (CKD) risk**
+- **Delayed remission risk**
 
-- **CKD risk prediction**
-- **Remission outcome prediction**
-
-In addition to the prediction result, the app provides **SHAP-based explainability** so users can see which factors contributed most to the model's decision at both the individual and overall level.
+The system was developed using clinical data from LN patients treated at **Hospital Canselor Tuanku Muhriz (HCTM), UKM** between **2000 and 2020**, and is designed to support more informed and proactive clinical assessment. The final deployed interface uses the **Baseline CatBoost model** and provides **prediction output, local SHAP explanation, global SHAP visualization, and CSV export** functionality.
 
 ---
 
-## Project Overview
+## Project Background
 
-SLE is a complex autoimmune disease with highly variable clinical presentations and outcomes. Because of this complexity, conventional analysis may miss important non-linear relationships between patient variables and disease outcomes.
+Systemic Lupus Erythematosus (SLE) is a heterogeneous autoimmune disease, and **Lupus Nephritis (LN)** is one of its most serious manifestations because it can lead to **chronic kidney disease (CKD)** and poor long-term renal outcomes. This project, titled **SLECare**, was built to classify LN patient risk using machine learning while keeping the workflow clinically interpretable and reproducible.
 
-This project applies a **CatBoost-based machine learning workflow** to structured clinical data and turns the trained models into an interactive application for easier demonstration and interpretation.
+The broader study benchmarked multiple machine learning models, but the final application deploys only the **Baseline CatBoost model**, as it achieved the most balanced overall performance for clinical use. The modelling workflow emphasised careful preprocessing, leakage control, feature selection, and explainability through SHAP.
 
-The app is designed to:
+---
 
-- support **baseline risk estimation** for selected SLE-related outcomes,
-- improve understanding of **important predictive features**,
-- provide **local and global explainability** through SHAP,
-- and demonstrate how machine learning can be translated into a simple clinical-facing tool.
+## Objectives
+
+This application was built to:
+
+1. Predict the risk of **CKD** in Malaysian LN patients.
+2. Predict the risk of **delayed remission**.
+3. Provide **interpretable model output** using SHAP.
+4. Support clinicians with a lightweight, interactive web-based prediction tool.
 
 ---
 
 ## Main Features
 
-### 1. Dual prediction mode
-Users can choose between two prediction modules:
+- **Two prediction modes**
+  - CKD
+  - Remission
+- **Baseline-only deployment**
+  - Uses pre-treatment / baseline patient features only
+- **CatBoost-based prediction**
+  - Chosen as the final deployed model
+- **SHAP interpretability**
+  - Local waterfall plot for patient-specific explanation
+  - Global SHAP bar plot image for overall feature importance
+- **Interactive Streamlit interface**
+  - User-friendly input form for clinicians or evaluators
+- **CSV export**
+  - Download prediction results directly from the app
 
-- **CKD**
-- **Remission**
+---
 
-Each module loads its own:
+## Model Scope
 
-- trained CatBoost model,
-- selected feature list,
-- global SHAP importance plot,
-- and dependence plots.
+Although the full project benchmarked three modelling scenarios:
 
-### 2. Interactive patient input form
-The interface dynamically generates input fields based on the selected model's required features.
+- **Baseline** = pre-treatment features only
+- **6MTH** = baseline + 3-month features
+- **12MTH** = baseline + 3-month + 6-month features
 
-It supports:
+only the **Baseline scenario** is deployed in this application, as it is the most practical for real clinical use and does not depend on future follow-up measurements.
 
-- numeric clinical inputs,
-- binary categorical inputs,
-- multi-class categorical inputs such as gender, race, and selected immunological markers,
-- and missing-indicator logic for selected biopsy-related variables.
+---
 
-### 3. Prediction result display
-After the user enters patient data and clicks the prediction button, the app returns a risk classification:
+## Final Deployed Model
 
-- **High risk**, or
-- **Low / no risk**
+The application uses:
 
-### 4. SHAP explainability
-To make the prediction interpretable, the app includes:
+- **CatBoost** for classification
+- **JSON feature lists** to ensure consistent model inputs
+- **Precomputed SHAP global bar plot images**
+- **Joblib-saved trained models**
 
-- **Local explanation** using a SHAP waterfall plot for the current patient
-- **Global explanation** using a saved SHAP feature importance bar plot
-- **Dependence plots** for selected important variables
+Two trained models are expected:
 
-### 5. CSV export
-Users can download the entered patient data together with the generated prediction as a CSV file.
+- `catboost_ckd_model.pkl`
+- `catboost_remission_model.pkl`
+
+and their corresponding selected feature files:
+
+- `ckd_rfe_features.json`
+- `remission_rfe_features.json`
+
+---
+
+## App Workflow
+
+1. User selects a prediction target:
+   - **CKD**
+   - **Remission**
+2. User enters baseline patient information.
+3. The app loads the correct trained CatBoost model and selected feature list.
+4. The app generates a prediction.
+5. The result is displayed as either:
+   - **High Risk**
+   - **Low / No Risk**
+6. SHAP-based explanations are shown:
+   - **Local explanation** via waterfall plot
+   - **Global explanation** via bar plot image
+7. The user may download the output as a **CSV file**.
 
 ---
 
 ## Tech Stack
 
 - **Python**
-- **Streamlit** for the web interface
-- **CatBoost** for machine learning prediction
-- **SHAP** for model explainability
-- **Pandas** for data handling
-- **Matplotlib** for plot rendering
-- **Joblib / JSON** for loading saved models and selected feature files
+- **Streamlit**
+- **Pandas**
+- **CatBoost**
+- **SHAP**
+- **Matplotlib**
+- **Joblib**
+- **JSON**
 
 ---
 
 ## Repository Contents
 
-A typical project structure for this app is expected to look like this:
+A minimal working repository should contain files similar to the following:
 
-```bash
+```text
 .
 ├── slecare_app.py
 ├── catboost_ckd_model.pkl
@@ -94,52 +124,11 @@ A typical project structure for this app is expected to look like this:
 ├── remission_rfe_features.json
 ├── ckd_barplot.png
 ├── remission_barplot.png
-├── Dependence Plots/
-│   ├── CKD_CREAT.png
-│   ├── CKD_LA.png
-│   ├── CKD_RACE.png
-│   ├── Remission_CKD.png
-│   ├── Remission_GLOBAL.png
-│   ├── Remission_MONTH.png
-│   └── Remission_RACE.png
 ├── requirements.txt
 └── README.md
 ```
 
-> Important: the app depends on these model, JSON, and image assets being present in the correct paths.
-
----
-
-## How the App Works
-
-### CKD module
-When the user selects **CKD**, the app loads:
-
-- `catboost_ckd_model.pkl`
-- `ckd_rfe_features.json`
-- `ckd_barplot.png`
-
-It then displays the feature input form based on the selected CKD features and generates a CKD risk prediction.
-
-### Remission module
-When the user selects **Remission**, the app loads:
-
-- `catboost_remission_model.pkl`
-- `remission_rfe_features.json`
-- `remission_barplot.png`
-
-It then displays the feature input form based on the selected remission features and generates the corresponding outcome prediction.
-
-### Explainability workflow
-After a prediction is made, the app:
-
-1. builds the input record into a dataframe,
-2. prepares categorical variables for CatBoost,
-3. runs the model prediction,
-4. computes SHAP values using `shap.TreeExplainer`,
-5. displays a **waterfall plot** for the individual patient,
-6. shows a **global feature importance plot**,
-7. and shows additional **dependence plots** if the image files exist.
+If your main Streamlit file has a different name, update the run command accordingly.
 
 ---
 
@@ -152,7 +141,7 @@ git clone <your-repository-url>
 cd <your-repository-folder>
 ```
 
-### 2. Create and activate a virtual environment (recommended)
+### 2. Create and activate a virtual environment
 
 **Windows**
 
@@ -164,7 +153,7 @@ venv\Scripts\activate
 **macOS / Linux**
 
 ```bash
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate
 ```
 
@@ -174,124 +163,148 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-If you do not yet have a `requirements.txt`, the main packages needed are:
+If you do not yet have a `requirements.txt`, you can install the core dependencies manually:
 
-```txt
-streamlit
-pandas
-joblib
-shap
-matplotlib
-catboost
+```bash
+pip install streamlit pandas joblib shap matplotlib catboost
 ```
 
 ---
 
 ## Running the App
 
-Start the Streamlit app with:
+Use Streamlit to launch the application:
 
 ```bash
 streamlit run slecare_app.py
 ```
 
-Then open the local URL shown in the terminal, usually:
+Then open the local URL shown in your terminal, usually:
 
-```bash
+```text
 http://localhost:8501
 ```
 
 ---
 
-## Using the App
+## Required Input Files
 
-1. Launch the app.
-2. Choose the prediction mode: **CKD** or **Remission**.
-3. Enter the required patient baseline data.
-4. Click **Ramal**.
-5. Review:
-   - the prediction result,
-   - the SHAP waterfall plot,
-   - the global importance plot,
-   - and the dependence plots.
-6. Download the result as CSV if needed.
+The app depends on the following external model and asset files being present in the same directory as the Streamlit app unless paths are changed in code:
 
----
+### Model files
+- `catboost_ckd_model.pkl`
+- `catboost_remission_model.pkl`
 
-## Input Handling Notes
+### Feature files
+- `ckd_rfe_features.json`
+- `remission_rfe_features.json`
 
-The app includes several interface rules to improve usability:
+### SHAP image files
+- `ckd_barplot.png`
+- `remission_barplot.png`
 
-- Some variables are entered through **dropdowns** instead of free-text input.
-- Some immunological variables use encoded categories such as:
-  - `0 = Negative`
-  - `1 = Positive`
-  - `2 = Not Tested`
-- Some biopsy-related missingness flags automatically assign default median values when the value is unavailable.
-
-This means the app is designed to work with the same feature format used during model preparation.
+If these files are missing, the application will not run correctly.
 
 ---
 
-## Expected Output
+## Input Behaviour
+
+The app dynamically builds the input form based on the selected feature list for each model.
+
+It supports:
+
+- **Numeric inputs** via number fields
+- **Categorical inputs** via dropdown selection
+- **Binary indicators** for selected clinical features
+- **Missingness flags** such as:
+  - `GLOBAL SCLEROSIS_MISSING`
+  - `CRESCENT_MISSING`
+
+Where a missingness flag is set to 1, the app fills the associated original value with a default numeric value before prediction.
+
+---
+
+## Output
 
 For each prediction, the app provides:
 
-- a risk classification,
-- local SHAP explanation for the individual patient,
-- global SHAP feature importance,
-- optional SHAP dependence plots,
-- and a downloadable CSV containing the entered record and prediction.
+- **Predicted risk category**
+- **Patient-specific SHAP waterfall plot**
+- **Global SHAP feature importance image**
+- **Downloadable CSV result**
+
+---
+
+## Clinical Interpretation Note
+
+This application is intended as a **decision support tool**, not as a standalone diagnostic or treatment system. Predictions should always be interpreted alongside:
+
+- clinical judgement,
+- patient history,
+- laboratory findings,
+- and specialist assessment.
+
+---
+
+## Research and Methodology Summary
+
+The wider SLECare project followed a structured machine learning workflow that included:
+
+- removal of irrelevant and leakage-prone features,
+- manual missing value handling,
+- outlier checks,
+- stratified train-test split,
+- feature selection using RFE,
+- benchmark comparison across CatBoost, Random Forest, MLP, and SVM,
+- and SHAP-based interpretability.
+
+While multiple benchmark models were explored, the final deployed interface uses only the **Baseline CatBoost model** for practicality, interpretability, and balanced performance.
 
 ---
 
 ## Limitations
 
-This repository is a prototype / academic FYP application and should be interpreted accordingly.
-
-- It is **not a production clinical system**.
-- It depends on the availability of the exact trained model files and supporting assets.
-- Predictions are limited to the outcomes implemented in the current version of the app.
-- The app is intended for **research, demonstration, and educational purposes**.
-- Clinical decisions should never rely on this tool alone without expert medical judgement.
+- The deployed app uses **baseline features only**.
+- The system was developed from a **single-centre Malaysian LN cohort**.
+- Predictions are constrained by the quality and representativeness of the historical dataset.
+- The repository does not itself include retraining code unless explicitly added.
 
 ---
 
-## Future Improvements
+## Suggested Future Improvements
 
-Potential future enhancements include:
-
-- cleaner feature labels for non-technical users,
-- better form grouping by clinical category,
-- probability score display in addition to class prediction,
-- richer patient-level explanation summaries in plain language,
-- model performance dashboard,
-- deployment to cloud hosting,
-- and support for additional SLE-related prediction tasks.
+- Add model confidence probabilities to the interface
+- Add clearer feature descriptions for non-technical users
+- Add input validation and error handling for missing artifact files
+- Add Docker support for easier deployment
+- Add deployment instructions for Streamlit Community Cloud or other hosting platforms
+- Add audit logging for clinical testing environments
 
 ---
 
-## Academic Context
+## Acknowledgements
 
-This app was developed as part of an FYP focused on applying machine learning to SLE-related clinical prediction and interpretability. The project combines:
+This project was developed as part of a Final Year Project at:
 
-- structured clinical data,
-- CatBoost modeling,
-- feature selection,
-- and SHAP-based explainable AI
+- **Universiti Kebangsaan Malaysia (UKM)**
+- **Faculty of Information Science and Technology (FTSM)**
 
-into a simple interactive interface that makes the trained models easier to demonstrate and understand.
+with clinical data and domain support related to Malaysian Lupus Nephritis cases from **Hospital Canselor Tuanku Muhriz (HCTM)**.
 
 ---
 
-## Disclaimer
+## Citation
 
-This application is intended for **academic and research use only**. It is not a certified medical device and is not intended to replace clinician judgement, diagnosis, or treatment planning.
+If you use or adapt this project, please cite the corresponding Final Year Project report and acknowledge the original clinical and academic context of SLECare.
 
 ---
 
-## Author
+## License
 
-**Muhammad Izzul Islam Bin Faisal**  
-Final Year Project - SLECare
+Add your preferred license here, for example:
 
+```text
+MIT License
+```
+
+or replace this section with your institution's required licensing terms.
